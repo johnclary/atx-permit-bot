@@ -3,6 +3,8 @@ build/
 dist/
 log/
 data/
+s3/
+deprecated/
 secrets.py
 dist
 __pycache__
