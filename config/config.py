@@ -17,3 +17,5 @@ FIELDMAP = {
 }
 
 DATE_FIELDS = ["application_date", "issued", "expiration_date"]
+
+TWEET_SERVER = "http://0.0.0.0:8000/tweet"

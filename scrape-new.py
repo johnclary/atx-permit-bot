@@ -9,7 +9,7 @@ import pdb
 
 import requests
 
-from config.config import BASE_URL, DATESTRING_FORMAT, FIELDMAP, DATE_FIELDS
+from config.config import BASE_URL, DATESTRING_FORMAT, FIELDMAP, DATE_FIELDS, TWEET_SERVER
 from config.secrets import ENDPOINT, TOKEN
 import utils
 
@@ -35,6 +35,10 @@ def cli_args():
 
     args = parser.parse_args()
     return args
+
+
+def post_tweet(data):
+    return requests.post(TWEET_SERVER, json=data)
 
 
 def load(data):
@@ -175,6 +179,15 @@ def main():
                 data = utils.replace_keys(data, FIELDMAP)
 
                 data = utils.handle_dates(data, DATE_FIELDS)
+
+                if "BP" in data["permit_id"]:
+                    # post BPs to twitter
+
+                    res = post_tweet(data)
+
+                    res.raise_for_status()
+
+                    data["bot_status"] = "posted"
 
                 # reset the search countdown
                 no_results_count = 0
