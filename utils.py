@@ -38,16 +38,16 @@ def parse_html(html):
     Extract permit data from html
     """
     soup = BeautifulSoup(html, "html.parser")
-    
-    permit_content = soup.find_all("div", {'class': 'group'})
+
+    permit_content = soup.find_all("div", {"class": "group"})
 
     data = {}
 
     if len(permit_content) > 0:
-        
+
         # get the "FOLDER DETAILS" element
         permit_content[0].findChildren("span")
-        
+
         # pull all the entries from this section
         spans = permit_content[0].findChildren("span")
 
@@ -56,8 +56,8 @@ def parse_html(html):
 
         # each pair of spans is a label + value
         for x in range(0, len(spans), 2):
-            label = spans[x].text.strip().replace(":","")
-            val = spans[x+1].text.strip()
+            label = spans[x].text.strip().replace(":", "")
+            val = spans[x + 1].text.strip()
             data[label] = val
 
         data["scrape_status"] = "captured"
