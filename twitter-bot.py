@@ -116,24 +116,6 @@ def main():
 
         time.sleep(5)
 
-"""
-case 1: new applications
-- where:
-- twitter has not been posted
-- application date is populated
-- issued is not populated
-- permit type contains xyz
-
-1. get data
-2. post tweet
-3. update bot status status
-
-case 2: issued permit
-- where:
-- twitter has not been posted
-- application and issued are populated
-- permit type contains xyz
-"""
 
 if __name__ == "__main__":
     logger = logging.getLogger("my_logger")
