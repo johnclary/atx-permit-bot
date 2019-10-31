@@ -17,6 +17,7 @@ import utils
 def cli_args():
     parser = argparse.ArgumentParser()
 
+    # todo: these might be deprecated
     parser.add_argument(
         "-b",
         "--backdate",
@@ -31,6 +32,16 @@ def cli_args():
         type=int,
         required=True,
         help="The number of new, not yet searched RSNs to attempt to find before giving up.",
+    )
+
+
+    parser.add_argument(
+        "-d",
+        "--direction",
+        type=str,
+        choices=["backward", "forward"],
+        required=True,
+        help="The direction to search, either backward or forward",
     )
 
     args = parser.parse_args()
@@ -60,6 +71,63 @@ def success(html):
         return True
 
 
+
+def process_new_permits(search_attempts):    
+    search_rsn = get_latest_found_rsn()
+
+    search_count = 0
+
+    while search_count <= search_attempts:
+
+            print(f"CURRENT: {search_rsn}")
+
+            search_count += 1
+
+            now = datetime.now().strftime(DATESTRING_FORMAT)
+
+            data = {
+                "rsn": str(search_rsn),
+                "scrape_status": "not_found",
+                "scrape_date": now,
+                "bot_status" : "not_posted"
+            }
+
+            html = get_permit_html(search_rsn)
+
+            if html:
+                # reset search count, keeping searching into future
+                print(f"FOUND {search_rsn}")
+
+                parsed_html = utils.parse_html(html)
+
+                if parsed_html:
+                    # update payload with parse permit attributes and scrape status
+
+                    data.update(parsed_html)
+
+                    data = utils.replace_keys(data, FIELDMAP)
+
+                    data = utils.handle_dates(data, DATE_FIELDS)
+
+                    if "BP" in data["permit_id"]:
+                        # post BPs to twitter
+
+                        res = post_tweet(data)
+
+                        res.raise_for_status()
+
+                        data["bot_status"] = "posted"
+
+                    # reset the search countdown
+                    search_count = 0
+
+            res = load(data)
+            search_attempts += 1
+            search_count += 1
+            search_rsn += 1
+            pdb.set_trace()
+
+
 def get_permit_html(rsn):
 
     now = datetime.now().strftime(DATESTRING_FORMAT)
@@ -77,6 +145,18 @@ def get_permit_html(rsn):
 
     else:
         return res.text
+
+def get_latest_found_rsn():
+    params = {
+        "select": "rsn",
+        "order": "rsn.desc",
+        "limit": 1,
+        "scrape_status": "eq.captured",
+    }
+
+    res = requests.get(ENDPOINT, params=params)
+
+    return int(res.json()[0]["rsn"])
 
 
 def get_not_found_rsns(limit):
@@ -100,103 +180,10 @@ def main():
 
     args = cli_args()
 
-    rsn_backdate = (
-        args.backdate
-    )  # how many "not_found" rsns to go back to check to see if they exist
-
-    max_useless_search = (
-        args.new
-    )  # how many searches to perform for future RSNs before giving up
-
-    not_found_rsns = get_not_found_rsns(
-        rsn_backdate
-    )  # all rsns (limit = rsn_backdate) that have no permit data
-
-
-    search_rsns = [
-        int(rsn["rsn"]) for rsn in not_found_rsns
-    ]  # listify not found rsns to search
-
-    search_rsns.reverse()
-
-    max_rsn = search_rsns[
-        -1
-    ]  # the current largest RSN that has ever been searched for and not found
-
-    print(f"MAX RSN: {max_rsn}")
-
-    global_search_count = 0  # how many searches have been attempted
-
-    no_results_count = 0  # how many searches have been performed without finding an RSN
-
-    current_rsn = search_rsns[0]
-
-    while (current_rsn <= max_rsn) or (no_results_count < max_useless_search):
-        """
-        Search for RSNs by incrementing forward through all backlog RSNs, as
-        Well as forward past the latest known RSN, up to the max_useless_search amount.
-        If nothing found new found, give up.
-        If something found, continue searching until nothing found.
-        Update status of in-between permits to something
-        """
-        if global_search_count < len(search_rsns):
-            # search through historical RSNs, known to be previously not found
-            current_rsn = search_rsns[global_search_count]
-
-            no_results_count = 0
-
-        else:
-            # search through any future RSNs
-            current_rsn += 1
-
-        print(f"CURRENT: {current_rsn}")
-
-        no_results_count += 1
-
-        global_search_count += 1
-
-        now = datetime.now().strftime(DATESTRING_FORMAT)
-
-        data = {
-            "rsn": str(current_rsn),
-            "scrape_status": "not_found",
-            "scrape_date": now,
-        }
-
-        html = get_permit_html(current_rsn)
-
-        if html:
-            # reset search count, keeping searching into future
-            print(f"FOUND {current_rsn}")
-
-            parsed_html = utils.parse_html(html)
-
-            if parsed_html:
-                # update payload with parse permit attributes and scrape status
-
-                data.update(parsed_html)
-
-                data = utils.replace_keys(data, FIELDMAP)
-
-                data = utils.handle_dates(data, DATE_FIELDS)
-
-                if "BP" in data["permit_id"]:
-                    # post BPs to twitter
-
-                    res = post_tweet(data)
-
-                    res.raise_for_status()
-
-                    data["bot_status"] = "posted"
-
-                # reset the search countdown
-                no_results_count = 0
-
-        res = load(data)
-
-        res.raise_for_status()
-
-        continue
+    if args.direction == "forward":
+        process_new_permits(args.new)
+    
+    
 
 
 if __name__ == "__main__":
