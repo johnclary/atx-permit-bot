@@ -127,6 +127,57 @@ def process_new_permits(search_attempts):
             search_rsn += 1
 
 
+def process_old_permits(backdate):    
+    not_found_rsns = get_not_found_rsns(
+        backdate
+    )  # all rsns (limit = rsn_backdate) that have no permit data
+
+    search_rsns = [
+        int(rsn["rsn"]) for rsn in not_found_rsns
+    ]  # listify not found rsns to search
+
+    for search_rsn in search_rsns:
+
+            print(f"CURRENT: {search_rsn}")
+
+            now = datetime.now().strftime(DATESTRING_FORMAT)
+
+            data = {
+                "rsn": str(search_rsn),
+                "scrape_status": "not_found",
+                "scrape_date": now,
+                "bot_status" : "not_posted"
+            }
+
+            html = get_permit_html(search_rsn)
+
+            if html:
+                # reset search count, keeping searching into future
+                print(f"FOUND {search_rsn}")
+
+                parsed_html = utils.parse_html(html)
+
+                if parsed_html:
+                    # update payload with parse permit attributes and scrape status
+
+                    data.update(parsed_html)
+
+                    data = utils.replace_keys(data, FIELDMAP)
+
+                    data = utils.handle_dates(data, DATE_FIELDS)
+
+                    if "BP" in data["permit_id"]:
+                        # post BPs to twitter
+
+                        res = post_tweet(data)
+
+                        res.raise_for_status()
+
+                        data["bot_status"] = "posted"
+
+            res = load(data)
+
+
 def get_permit_html(rsn):
 
     now = datetime.now().strftime(DATESTRING_FORMAT)
@@ -181,6 +232,15 @@ def main():
 
     if args.direction == "forward":
         process_new_permits(args.new)
+
+    elif args.direction == "backward":
+        if args.backdate > 5000:
+            raise Exception("it is only possibly to query backward 5000 rsns due to server query limitations")
+            
+        process_old_permits(args.backdate)
+
+    else:
+        raise Exception("Direction not specified. Try command with `-d forward` or `-d backward`")
     
     
 
