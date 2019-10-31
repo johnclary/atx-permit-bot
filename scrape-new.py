@@ -125,7 +125,6 @@ def process_new_permits(search_attempts):
             search_attempts += 1
             search_count += 1
             search_rsn += 1
-            pdb.set_trace()
 
 
 def get_permit_html(rsn):
