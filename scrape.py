@@ -137,6 +137,8 @@ def tweetworthy(data):
 def process_new_permits(search_attempts):
     search_rsn = get_latest_found_rsn()
 
+    search_rsn += 1
+    
     search_count = 0
 
     while search_count <= search_attempts:
