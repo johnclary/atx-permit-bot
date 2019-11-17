@@ -33,17 +33,11 @@ def replace_keys(d, fields):
     return new_dict
 
 
-def parse_html(html):
-    """
-    Extract permit data from html and returnt contents as dict.
-    Also add a "scrape_status" value, meant to flag the status of
-    the rsn record in postgrest.
-    """
-    soup = BeautifulSoup(html, "html.parser")
+def parse_folder_details(soup, data):
 
     permit_content = soup.find_all("div", {"class": "group"})
 
-    data = {}
+    permit_content = soup.find_all("div", {"class": "group"})
 
     if len(permit_content) > 0:
 
@@ -66,5 +60,60 @@ def parse_html(html):
 
     else:
         data["scrape_status"] = "retrieved_no_content"
+
+    return data
+
+
+def parse_property_details(soup, data):
+
+    property_headers = [
+        "property_number",
+        "property_pre",
+        "property_street",
+        "property_streettype",
+        "property_dir",
+        "property_unit_type",
+        "property_unit_number",
+        "property_city",
+        "property_state",
+        "property_zip",
+        "property_legal_desc",
+    ]
+
+    tables = soup.find_all("table")
+
+    # we expect property details to be the 2nd table
+    propert_info_table = tables[1]
+
+    table_rows = propert_info_table.find_all("tr")
+
+    for tr in table_rows:
+        td = tr.find_all("td")
+        row = [i.text.strip() for i in td]
+
+        # sometimes the property details has a street segment entry, which has different columns from an address entry
+        # we only want address entries. we veryify by checking number of cells in row
+        if len(row) == 11:
+            data.update(dict(zip(property_headers, row)))
+
+            # a permit could have multiple properties. we just take the first.
+            break
+
+    return data
+
+
+def parse_html(html):
+    """
+    Extract permit data from html and returnt contents as dict.
+    Also add a "scrape_status" value, meant to flag the status of
+    the rsn record in postgrest.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    data = {}
+
+    data = parse_folder_details(soup, data)
+
+    data = parse_property_details(soup, data)
 
     return data
