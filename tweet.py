@@ -47,7 +47,7 @@ def parse_subtype(subtype):
 
 
 def format_tweet(permit):
-    return f"{permit['subtype']} at {permit['project_name']} ({permit['status']}) {BASE_URL}{permit['rsn']}"
+    return f"{permit['subtype']} at {permit['project_name']} ({permit['property_zip']}) {BASE_URL}{permit['rsn']}"
 
 
 def main():
