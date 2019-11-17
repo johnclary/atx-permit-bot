@@ -21,7 +21,6 @@ from config.config import (
     DATESTRING_FORMAT,
     FIELDMAP,
     DATE_FIELDS,
-    TWEET_SERVER
 )
 
 from config.secrets import ENDPOINT, TOKEN
@@ -51,9 +50,6 @@ def cli_args():
     args = parser.parse_args()
     return args
 
-
-def post_tweet(data):
-    return requests.post(TWEET_SERVER, json=data)
 
 
 def load(data):
@@ -103,7 +99,7 @@ def tweetworthy(data):
         "C- 437",
         "R- 435",
         "R- 329",
-        "R- 434"
+        "R- 434",
     ]
 
     non_bp_subtypes = [
@@ -118,7 +114,7 @@ def tweetworthy(data):
     if not data.get("subtype"):
         return False
 
-    elif "BP" in data["permit_id"]: 
+    elif "BP" in data["permit_id"]:
         for subtype_prefix in exclude_subtypes:
             if subtype_prefix in data["subtype"]:
                 return False
@@ -126,7 +122,7 @@ def tweetworthy(data):
 
     elif "short term" in data["subtype"].lower():
         return True
-    
+
     elif data["subtype"] in non_bp_subtypes:
         return True
 
@@ -134,11 +130,54 @@ def tweetworthy(data):
         return False
 
 
+def prep_data_payload(search_rsn):
+    """
+    Generate a permit DB payload.
+    """
+    now = datetime.now().strftime(DATESTRING_FORMAT)
+
+    return {
+        "rsn": str(search_rsn),
+        "scrape_status": "not_found",
+        "scrape_date": now,
+        "bot_status": "nothing_to_tweet",
+    }
+
+
+def process_rsn(search_rsn):
+    data = prep_data_payload(search_rsn)
+
+    html = get_permit_html(search_rsn)
+
+    if html:
+
+        parsed_html = utils.parse_html(html)
+
+        if parsed_html:
+            # update payload with parse permit attributes and scrape status
+
+            data.update(parsed_html)
+
+            data = utils.replace_keys(data, FIELDMAP)
+
+            data = utils.handle_dates(data, DATE_FIELDS)
+
+            if tweetworthy(data):
+                data["bot_status"] = "ready_to_tweet"
+            else:
+                data["bot_status"] = "not_tweetworthy"
+
+        else:
+            logger.info(f"Not found: {search_rsn}")
+
+    return data
+
+
 def process_new_permits(search_attempts):
     search_rsn = get_latest_found_rsn()
 
     search_rsn += 1
-    
+
     search_count = 0
 
     while search_count <= search_attempts:
@@ -147,47 +186,19 @@ def process_new_permits(search_attempts):
 
         search_count += 1
 
-        now = datetime.now().strftime(DATESTRING_FORMAT)
+        data = process_rsn(search_rsn)
 
-        data = {
-            "rsn": str(search_rsn),
-            "scrape_status": "not_found",
-            "scrape_date": now,
-            "bot_status": "not_posted",
-        }
-
-        html = get_permit_html(search_rsn)
-
-        if html:
-            # reset search count, keeping searching into future
-            logger.info(f"Captured: {search_rsn}")
-
-            parsed_html = utils.parse_html(html)
-
-            if parsed_html:
-                # update payload with parse permit attributes and scrape status
-
-                data.update(parsed_html)
-
-                data = utils.replace_keys(data, FIELDMAP)
-
-                data = utils.handle_dates(data, DATE_FIELDS)
-
-                if tweetworthy(data):
-
-                    res = post_tweet(data)
-
-                    res.raise_for_status()
-
-                    data["bot_status"] = "posted"
-
-                # reset the search countdown
-                search_count = 0
-        else:
-            logger.info(f"Not found: {search_rsn}")
         res = load(data)
+
+        if data.get("scrape_status") == "captured":
+            search_count = 0
+            print(f"FOUND: {search_rsn}")
+
+        else:
+            search_count += 1
+
         search_attempts += 1
-        search_count += 1
+
         search_rsn += 1
 
 
@@ -201,43 +212,9 @@ def process_old_permits(backdate):
     ]  # listify not found rsns to search
 
     for search_rsn in search_rsns:
-
         print(f"CURRENT: {search_rsn}")
 
-        now = datetime.now().strftime(DATESTRING_FORMAT)
-
-        data = {
-            "rsn": str(search_rsn),
-            "scrape_status": "not_found",
-            "scrape_date": now,
-            "bot_status": "not_posted",
-        }
-
-        html = get_permit_html(search_rsn)
-
-        if html:
-            # reset search count, keeping searching into future
-            print(f"FOUND {search_rsn}")
-
-            parsed_html = utils.parse_html(html)
-
-            if parsed_html:
-                # update payload with parse permit attributes and scrape status
-
-                data.update(parsed_html)
-
-                data = utils.replace_keys(data, FIELDMAP)
-
-                data = utils.handle_dates(data, DATE_FIELDS)
-
-                if "BP" in data["permit_id"]:
-                    # post BPs to twitter
-
-                    res = post_tweet(data)
-
-                    res.raise_for_status()
-
-                    data["bot_status"] = "posted"
+        data = process_rsn(search_rsn)
 
         res = load(data)
 
@@ -317,7 +294,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p"
     )
-    handler = RotatingFileHandler("log/scrape-new.log", maxBytes=20000000)
+    handler = RotatingFileHandler("log/scrape.log", maxBytes=2000000)
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
     main()
