@@ -206,7 +206,7 @@ def process_new_permits(search_attempts):
 
 def process_old_permits(backdate):
     logger.info(f"process old permits")
-    
+
     not_found_rsns = get_not_found_rsns(
         backdate
     )  # all rsns (limit = rsn_backdate) that have no permit data
@@ -294,10 +294,10 @@ def main():
 
 
 if __name__ == "__main__":
-    logger = logging.getLogger("my_logger")
     logging.basicConfig(
         format="%(asctime)s %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p"
     )
+    logger = logging.getLogger("my_logger")
     handler = RotatingFileHandler("log/scrape.log", maxBytes=2000000)
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
