@@ -155,6 +155,7 @@ def process_rsn(search_rsn):
 
         if parsed_html:
             # update payload with parse permit attributes and scrape status
+            logger.info(f"found: {search_rsn}")
 
             data.update(parsed_html)
 
@@ -168,12 +169,13 @@ def process_rsn(search_rsn):
                 data["bot_status"] = "not_tweetworthy"
 
         else:
-            logger.info(f"Not found: {search_rsn}")
+            logger.info(f"not found: {search_rsn}")
 
     return data
 
 
 def process_new_permits(search_attempts):
+    logger.info(f"process new permits")
     search_rsn = get_latest_found_rsn()
 
     search_rsn += 1
@@ -203,6 +205,8 @@ def process_new_permits(search_attempts):
 
 
 def process_old_permits(backdate):
+    logger.info(f"process old permits")
+    
     not_found_rsns = get_not_found_rsns(
         backdate
     )  # all rsns (limit = rsn_backdate) that have no permit data
