@@ -80,10 +80,27 @@ def parse_property_details(soup, data):
         "property_legal_desc",
     ]
 
-    tables = soup.find_all("table")
+    """
+    Some elements have "for" and "name" identifiers which seem to uniquely idenfity elements in the permit database, probably tables.
+    
+    The HTML for the "PROPERTY DETAILS" section has one such attribute, `d_1376492351078` . We want to extract the property details table
+    from this section, which is structured like:
 
-    # we expect property details to be the 2nd table
-    propert_info_table = tables[1]
+    <div>
+      <h2 style="">
+        <label for="d_1376492351078" title=""> <span> PROPERTY DETAILS </span> </label>
+      </h2>
+      <table>
+        ...    
+      </table>
+    </div>
+    
+    To grab the table, we tell BS4 to find the label for `d_1376492351078` and then find the next table. Beautiful Soup rules.
+    """
+
+    propert_info_table = soup.select('label[for="d_1376492351078"]')[0].find_next(
+        "table"
+    )
 
     table_rows = propert_info_table.find_all("tr")
 
