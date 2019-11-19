@@ -10,6 +10,7 @@ import pdb
 import time
 
 import requests
+import twitter
 
 from config.config import BASE_URL
 
@@ -23,6 +24,17 @@ from config.secrets import (
 )
 
 from utils import utils
+
+
+def load(data):
+
+    headers = {
+        "Authorization": f"Bearer {TOKEN}",
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates",
+    }
+
+    return requests.post(ENDPOINT, headers=headers, json=data)
 
 
 def get_tweet_data():
@@ -47,7 +59,13 @@ def parse_subtype(subtype):
 
 
 def format_tweet(permit):
-    return f"{permit['subtype']} at {permit['project_name']} ({permit['property_zip']}) {BASE_URL}{permit['rsn']}"
+    if not permit.get("property_zip"):
+        return (
+            f"{permit['subtype']} at {permit['project_name']} {BASE_URL}{permit['rsn']}"
+        )
+
+    else:
+        return f"{permit['subtype']} at {permit['project_name']} ({permit['property_zip']}) {BASE_URL}{permit['rsn']}"
 
 
 def main():
@@ -58,6 +76,7 @@ def main():
         data = get_tweet_data()
 
         if not data:
+            time.sleep(60)
             continue
 
         # instantiate the api on every new data pull
@@ -80,15 +99,13 @@ def main():
 
             res = api.PostUpdate(tweet)
 
+            update_payload = {"bot_status": "tweeted", "rsn": permit["rsn"]}
+
+            res = load(update_payload)
+
             res.raise_for_status()
 
-            update_payload = {"bot_status": "tweeted", "rsn": data["rsn"]}
-
-            load(update_payload)
-
             time.sleep(3)
-
-        time.sleep(60)
 
 
 if __name__ == "__main__":
