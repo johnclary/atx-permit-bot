@@ -16,12 +16,7 @@ import pdb
 
 import requests
 
-from config.config import (
-    BASE_URL,
-    DATESTRING_FORMAT,
-    FIELDMAP,
-    DATE_FIELDS,
-)
+from config.config import BASE_URL, DATESTRING_FORMAT, FIELDMAP, DATE_FIELDS
 
 from config.secrets import ENDPOINT, TOKEN
 from utils import utils
@@ -49,7 +44,6 @@ def cli_args():
 
     args = parser.parse_args()
     return args
-
 
 
 def load(data):
