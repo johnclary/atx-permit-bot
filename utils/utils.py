@@ -97,10 +97,12 @@ def parse_property_details(soup, data):
     
     To grab the table, we tell BS4 to find the label for `d_1376492351078` and then find the next table. Beautiful Soup rules.
     """
+    property_info_label = soup.select('label[for="d_1376492351078"]')
 
-    propert_info_table = soup.select('label[for="d_1376492351078"]')[0].find_next(
-        "table"
-    )
+    if not property_info_label:
+        return data
+
+    propert_info_table = property_info_label[0].find_next("table")
 
     table_rows = propert_info_table.find_all("tr")
 
