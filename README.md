@@ -13,14 +13,14 @@ The bot tweets these permit types:
 - Hotel
 - Easement Release
 
-\* Excluding commercial and residential remodels and rennovations.
+\* Excluding commercial and residential remodels and renovations.
 
 ## How It Works
 
 The bot is written in Python and is comprised of three components:
 
-1. The scraper (`scrape.py`) retrieves new permit data and posts it to the tweet server.
+1. A [PostgREST](http://postgrest.org/)-fronted PostgreSQL database stores permit data and keeps track of what's been tweeted.
 
-2. The tweet server (`tweet-server.py`) is a [Sanic](https://github.com/huge-success/sanic) app which listens for permit data and tweets it.
+2. The scraper (`scrape.py`) retrieves new permit data and loads it to the database.
 
-3. A [PostgREST](http://postgrest.org/)-fronted PostgreSQL database archives permit data and keeps track of what's been tweeted.
+3. `tweet.py` intermittently queries the permit database for tweetworthy permits, and tweets them.
