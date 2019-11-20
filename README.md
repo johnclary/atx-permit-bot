@@ -24,3 +24,7 @@ The bot is written in Python and is comprised of three components:
 2. `scrape.py` retrieves new permit data and loads it to the database.
 
 3. `tweet.py` intermittently queries the permit database for tweetworthy permits, and tweets them.
+
+## Contributions and Feedback
+
+Open [an issue](https://github.com/johnclary/atx-permit-bot/issues) to provide feedback or suggest a new feature. Pull requests welcome :)
