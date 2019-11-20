@@ -21,6 +21,6 @@ The bot is written in Python and is comprised of three components:
 
 1. A [PostgREST](http://postgrest.org/)-fronted PostgreSQL database stores permit data and keeps track of what's been tweeted.
 
-2. The scraper (`scrape.py`) retrieves new permit data and loads it to the database.
+2. `scrape.py` retrieves new permit data and loads it to the database.
 
 3. `tweet.py` intermittently queries the permit database for tweetworthy permits, and tweets them.
