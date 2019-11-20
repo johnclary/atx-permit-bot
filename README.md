@@ -1,5 +1,5 @@
 # atx-permit-bot
-*This is a personal project and has no affiliation with or endorsement from the City of Austin.*
+*This is a personal project with no affiliation with or endorsement from the City of Austin.*
 
 This bot tweets about new permits issued in Austin, TX. It does so by scraping the City of Austin's [Build & Connect Portal](https://abc.austintexas.gov/).
 
