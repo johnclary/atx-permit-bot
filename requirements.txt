@@ -1,5 +1,3 @@
 requests
-sanic
 python-twitter
 bs4
-boto3
