@@ -74,6 +74,7 @@ def main():
 
     if not data:
         logger.info("nothing to tweet")
+        return
 
     # instantiate the api on every new data pull
     api = twitter.Api(
