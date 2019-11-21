@@ -97,7 +97,17 @@ def main():
 
             tweet = format_tweet(permit)
 
-            res = api.PostUpdate(tweet)
+            try:
+                res = api.PostUpdate(tweet)
+
+            except Exception as e:
+                # handle when twitter rejects a duplicate tweet
+                # this happens occasionally for duplicate permit types at the same `project_name`
+                # twitter api error is [{'code': 187, 'message': 'Status is a duplicate.'}]
+                for message in e.message:
+                    if message.get("code") != 187:
+                        raise e
+                pass
 
             update_payload = {"bot_status": "tweeted", "rsn": permit["rsn"]}
 
@@ -105,6 +115,7 @@ def main():
 
             res.raise_for_status()
 
+            # sleep for a bit between tweets
             time.sleep(3)
 
 
