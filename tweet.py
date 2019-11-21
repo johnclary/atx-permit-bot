@@ -70,54 +70,49 @@ def format_tweet(permit):
 
 def main():
 
-    while True:
-        logger.info("checkin for new data")
+    data = get_tweet_data()
 
-        data = get_tweet_data()
+    if not data:
+        logger.info("nothing to tweet")
 
-        if not data:
-            logger.info("nothing to tweet")
-            time.sleep(60)
-            continue
+    # instantiate the api on every new data pull
+    api = twitter.Api(
+        consumer_key=CONSUMER_API_KEY,
+        consumer_secret=CONSUMER_API_SECRET,
+        access_token_key=TWITTER_ACCESS_TOKEN,
+        access_token_secret=TWITTER_ACCESS_TOKEN_SECRET,
+    )
 
-        # instantiate the api on every new data pull
-        api = twitter.Api(
-            consumer_key=CONSUMER_API_KEY,
-            consumer_secret=CONSUMER_API_SECRET,
-            access_token_key=TWITTER_ACCESS_TOKEN,
-            access_token_secret=TWITTER_ACCESS_TOKEN_SECRET,
-        )
+    for permit in data:
 
-        for permit in data:
+        subtype = permit["subtype"]
 
-            logger.info("posting")
+        permit["subtype"] = parse_subtype(subtype)
 
-            subtype = permit["subtype"]
+        tweet = format_tweet(permit)
 
-            permit["subtype"] = parse_subtype(subtype)
+        logger.info(tweet)
 
-            tweet = format_tweet(permit)
+        try:
+            res = api.PostUpdate(tweet)
 
-            try:
-                res = api.PostUpdate(tweet)
+        except Exception as e:
+            # handle when twitter rejects a duplicate tweet
+            # this happens occasionally for duplicate permit types at the same `project_name`
+            # twitter api error is [{'code': 187, 'message': 'Status is a duplicate.'}]
+            for message in e.message:
+                if message.get("code") != 187:
+                    raise e
+            pass
 
-            except Exception as e:
-                # handle when twitter rejects a duplicate tweet
-                # this happens occasionally for duplicate permit types at the same `project_name`
-                # twitter api error is [{'code': 187, 'message': 'Status is a duplicate.'}]
-                for message in e.message:
-                    if message.get("code") != 187:
-                        raise e
-                pass
+        update_payload = {"bot_status": "tweeted", "rsn": permit["rsn"]}
 
-            update_payload = {"bot_status": "tweeted", "rsn": permit["rsn"]}
+        res = load(update_payload)
 
-            res = load(update_payload)
+        res.raise_for_status()
 
-            res.raise_for_status()
-
-            # sleep for a bit between tweets
-            time.sleep(3)
+        # sleep for a bit between tweets
+        time.sleep(3)
 
 
 if __name__ == "__main__":
