@@ -291,15 +291,21 @@ if __name__ == "__main__":
     logger = logging.getLogger("tweet_logger")
     logger.setLevel(logging.DEBUG)
 
-    handler = RotatingFileHandler("log/scrape.log", maxBytes=2000000)
+    file_handler = RotatingFileHandler("log/scrape.log", maxBytes=2000000)
     
     formatter = logging.Formatter(
         fmt="%(asctime)s %(message)s",
         datefmt="%m/%d/%Y %I:%M:%S %p",
     )
 
-    handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
 
-    logger.addHandler(handler)
+    logger.addHandler(file_handler)
 
+    console = logging.StreamHandler()
+
+    console.setFormatter(formatter)
+
+    logger.addHandler(console)
+        
     main()
