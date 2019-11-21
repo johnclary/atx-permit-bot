@@ -109,11 +109,18 @@ def main():
 
 
 if __name__ == "__main__":
-    logger = logging.getLogger("my_logger")
-    logging.basicConfig(
-        format="%(asctime)s %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p"
-    )
-    handler = RotatingFileHandler("log/tweet.log", maxBytes=2000000)
-    logger.addHandler(handler)
+    logger = logging.getLogger("tweet_logger")
     logger.setLevel(logging.DEBUG)
+
+    handler = RotatingFileHandler("log/tweet.log", maxBytes=2000000)
+    
+    formatter = logging.Formatter(
+        fmt="%(asctime)s %(message)s",
+        datefmt="%m/%d/%Y %I:%M:%S %p",
+    )
+
+    handler.setFormatter(formatter)
+
+    logger.addHandler(handler)
+        
     main()
