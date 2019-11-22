@@ -5,4 +5,6 @@
 */21 * * * * sudo bash /home/ec2-user/get_old_permits.sh
 
 # check for tweets at every 2nd minute from 1 through 59
+# the docker run command in this script will fail if the tweet script is already running
+# because it does not allow to containers of the same name to run ;)
 1-59/2 * * * * sudo bash /home/ec2-user/tweet.sh
