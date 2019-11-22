@@ -1,11 +1,8 @@
 # scrape new permits every two minutes
-*/2 * * * * sudo bash /home/ec2-user/deploy/get_new_permits.sh
+*/2 * * * * sudo bash /home/ec2-user/atx-permit-bot/deploy/get_new_permits.sh
 
 # check in on old not found permits every 21 minutes
-*/21 * * * * sudo bash /home/ec2-user/deploy/get_old_permits.sh
+*/21 * * * * sudo bash /home/ec2-user/atx-permit-bot/deploy/get_old_permits.sh
 
 # check for tweets at every 2nd minute from 1 through 59
-1-59/2 * * * * sudo bash /home/ec2-user/deploy/get_old_permits.sh
-
-# restart the tweet script on a daily basis
-0 0 * * * sudo docker restart tweets
+1-59/2 * * * * sudo bash /home/ec2-user/atx-permit-bot/deploy/get_old_permits.sh
