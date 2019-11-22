@@ -1,0 +1,8 @@
+# scrape new permits every two minutes
+*/2 * * * * sudo bash /home/ec2-user/get_new_permits.sh
+
+# check in on old not found permits every 21 minutes
+*/21 * * * * sudo bash /home/ec2-user/get_old_permits.sh
+
+# check for tweets at every 2nd minute from 1 through 59
+1-59/2 * * * * sudo bash /home/ec2-user/tweet.sh
