@@ -5,4 +5,4 @@
 */21 * * * * sudo bash /home/ec2-user/atx-permit-bot/deploy/get_old_permits.sh
 
 # check for tweets at every 2nd minute from 1 through 59
-1-59/2 * * * * sudo bash /home/ec2-user/atx-permit-bot/deploy/get_old_permits.sh
+1-59/2 * * * * sudo bash /home/ec2-user/atx-permit-bot/deploy/tweet.sh
