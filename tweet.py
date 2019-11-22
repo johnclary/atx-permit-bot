@@ -76,7 +76,6 @@ def main():
         logger.info("nothing to tweet")
         return
 
-    # instantiate the api on every new data pull
     api = twitter.Api(
         consumer_key=CONSUMER_API_KEY,
         consumer_secret=CONSUMER_API_SECRET,
@@ -94,6 +93,19 @@ def main():
 
         logger.info(tweet)
 
+        """
+        We update the record status in postgres before tweeting. If this step were to fail after
+        we tweeted, the bot would continue to tweet about the permit until the db was able to
+        be updated. So this is a failsafe. Better to miss a tweet than tweet indefinitely.
+        The twitter API does it's own checks to prevent duplicate tweets. But it's not always
+        clear how it makes that determinition
+        """
+        update_payload = {"bot_status": "tweeted", "rsn": permit["rsn"]}
+
+        res = load(update_payload)
+
+        res.raise_for_status()
+
         try:
             res = api.PostUpdate(tweet)
 
@@ -103,16 +115,13 @@ def main():
             # twitter api error is [{'code': 187, 'message': 'Status is a duplicate.'}]
             for message in e.message:
                 if message.get("code") != 187:
+                    logger.error(e.message)
+                    # if the tweet fails, let the db know as such
+                    update_payload = {"bot_status": "api_error", "rsn": permit["rsn"]}
+                    res = load(update_payload)
                     raise e
             pass
 
-        update_payload = {"bot_status": "tweeted", "rsn": permit["rsn"]}
-
-        res = load(update_payload)
-
-        res.raise_for_status()
-
-        # sleep for a bit between tweets
         time.sleep(3)
 
 
