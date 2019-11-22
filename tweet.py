@@ -83,6 +83,8 @@ def main():
         access_token_secret=TWITTER_ACCESS_TOKEN_SECRET,
     )
 
+    tweets = []
+
     for permit in data:
 
         subtype = permit["subtype"]
@@ -90,6 +92,17 @@ def main():
         permit["subtype"] = parse_subtype(subtype)
 
         tweet = format_tweet(permit)
+
+        if tweet in tweets:
+            # avoid duplicate tweets in same run. it happens with multiple units on
+            # on proptery. eg.:
+            # https://abc.austintexas.gov/web/permit/public-search-other?t_detail=1&t_selected_folderrsn=12367861
+            # and 
+            # https://abc.austintexas.gov/web/permit/public-search-other?t_detail=1&t_selected_folderrsn=12367860
+            continue
+
+        else:
+            tweets.append(tweet)
 
         logger.info(tweet)
 
