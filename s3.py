@@ -26,8 +26,7 @@ def get_last_not_found_rsn():
     params = {
         "select": "rsn",
         "order": "rsn.desc",
-        "limit": 1,
-        "scrape_status": "eq.captured",
+        "limit": 1
     }
 
     res = requests.get(ENDPOINT_S3, params=params)
@@ -52,7 +51,8 @@ def update_rsn(rsn, status=None):
     if status == "in_progress":
         return requests.post(ENDPOINT_S3, headers=headers, json=data)
     else:
-        return requests.patch(ENDPOINT_S3, headers=headers, json=data)
+        params = {"rsn" : f"eq.{rsn}"}
+        return requests.patch(ENDPOINT_S3, headers=headers, json=data, params=params)
 
 
 def success(html):
@@ -111,7 +111,9 @@ def async_get_permits(rsn):
 
     logger.info(f"Found {rsn}")
 
-    update_rsn(rsn, status="captured")
+    res = update_rsn(rsn, status="captured")
+
+    res.raise_for_status()
 
     fname = f"s3/{rsn}.html"
 
