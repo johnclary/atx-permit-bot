@@ -153,7 +153,7 @@ def get_permit(url):
 
 def main():
 
-    permits_to_process = 10
+    permits_to_process = 10000
 
     tasks = range(permits_to_process)
 
