@@ -164,7 +164,7 @@ def main():
 
     tasks = range(permits_to_process)
 
-    with Pool(processes=12) as pool:
+    with Pool(processes=24) as pool:
         pool.map(async_get_permits, tasks)
 
     logger.info("done")
