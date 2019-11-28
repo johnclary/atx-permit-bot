@@ -12,11 +12,12 @@ import boto3
 import requests
 
 from config.config import BASE_URL, DATESTRING_FORMAT
-from config.secrets import ENDPOINT_S3, TOKEN
+from config.secrets import TOKEN
 
 from botocore import UNSIGNED
 from botocore.config import Config
 
+ENDPOINT_S3 = "http://0.0.0.0/scrape_status"
 
 def get_last_not_found_rsn():
     """
