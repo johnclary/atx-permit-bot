@@ -104,6 +104,7 @@ def async_get_permits(rsn):
 
     html = get_permit(url)
 
+
     if not html:
         logger.info(f"Failed {rsn}")
         update_rsn(rsn, status="failed")
@@ -111,7 +112,10 @@ def async_get_permits(rsn):
 
     logger.info(f"Found {rsn}")
 
-    res = update_rsn(rsn, status="captured")
+    if not success(html):
+        res = update_rsn(rsn, status="captured_not_found")
+    else:
+        res = update_rsn(rsn, status="captured")
 
     res.raise_for_status()
 
@@ -155,11 +159,11 @@ def get_permit(url):
 
 def main():
 
-    permits_to_process = 10000
+    permits_to_process = 100000
 
     tasks = range(permits_to_process)
 
-    with Pool(processes=4) as pool:
+    with Pool(processes=6) as pool:
         pool.map(async_get_permits, tasks)
 
     logger.info("done")
