@@ -1,1 +1,1 @@
-sudo docker run --name scrape-forward -d --rm -v /home/ec2-user/atx-permit-bot:/app -w /app atx-permit-bot python scrape.py -d forward -n 20
+sudo docker run --network="host" --name scrape-forward -d --rm -v /home/ec2-user/atx-permit-bot:/app -w /app atx-permit-bot python scrape.py -d forward -n 20
